@@ -1,0 +1,115 @@
+document.addEventListener("DOMContentLoaded", () => {
+    const clock = document.getElementById("clock");
+    const toggleFormatButton = document.getElementById("toggle-format");
+    const bgColorInput = document.getElementById("bg-color");
+    const textColorInput = document.getElementById("text-color");
+    const fontSizeInput = document.getElementById("font-size");
+    const saveSettingsButton = document.getElementById("save-settings");
+    const alarmTimeInput = document.getElementById("alarm-time");
+    const setAlarmButton = document.getElementById("set-alarm");
+    const alarmList = document.getElementById("alarm-list");
+  
+    let is24HourFormat = false;
+    let alarms = [];
+    const preferencesKey = "clockPreferences";
+    const alarmsKey = "alarms";
+  
+    // Load preferences and alarms from localStorage
+    const loadPreferences = () => {
+      const savedPreferences = JSON.parse(localStorage.getItem(preferencesKey)) || {};
+      const savedAlarms = JSON.parse(localStorage.getItem(alarmsKey)) || [];
+  
+      if (savedPreferences) {
+        if (savedPreferences.bgColor) document.body.style.backgroundColor = savedPreferences.bgColor;
+        if (savedPreferences.textColor) clock.style.color = savedPreferences.textColor;
+        if (savedPreferences.fontSize) clock.style.fontSize = `${savedPreferences.fontSize}px`;
+  
+        bgColorInput.value = savedPreferences.bgColor || "#ffffff";
+        textColorInput.value = savedPreferences.textColor || "#000000";
+        fontSizeInput.value = savedPreferences.fontSize || "48";
+      }
+  
+      alarms = savedAlarms;
+      renderAlarms();
+    };
+  
+    const savePreferences = () => {
+      const preferences = {
+        bgColor: bgColorInput.value,
+        textColor: textColorInput.value,
+        fontSize: fontSizeInput.value
+      };
+      localStorage.setItem(preferencesKey, JSON.stringify(preferences));
+    };
+  
+    const renderAlarms = () => {
+      alarmList.innerHTML = "";
+      alarms.forEach((alarm, index) => {
+        const li = document.createElement("li");
+        li.textContent = `Alarm set for: ${alarm}`;
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", () => {
+          alarms.splice(index, 1);
+          localStorage.setItem(alarmsKey, JSON.stringify(alarms));
+          renderAlarms();
+        });
+        li.appendChild(deleteButton);
+        alarmList.appendChild(li);
+      });
+    };
+  
+    // Update clock
+    const updateClock = () => {
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, "0");
+      const seconds = now.getSeconds().toString().padStart(2, "0");
+  
+      if (!is24HourFormat) {
+        const amPm = hours >= 12 ? "PM" : "AM";
+        hours = hours % 12 || 12;
+        clock.textContent = `${hours}:${minutes}:${seconds} ${amPm}`;
+      } else {
+        clock.textContent = `${hours.toString().padStart(2, "0")}:${minutes}:${seconds}`;
+      }
+  
+      // Check alarms
+      const currentTime = `${hours}:${minutes}`;
+      if (alarms.includes(currentTime)) {
+        alert("Alarm ringing!");
+        alarms = alarms.filter(alarm => alarm !== currentTime); // Remove fired alarms
+        localStorage.setItem(alarmsKey, JSON.stringify(alarms));
+        renderAlarms();
+      }
+    };
+  
+    // Event listeners
+    toggleFormatButton.addEventListener("click", () => {
+      is24HourFormat = !is24HourFormat;
+      toggleFormatButton.textContent = is24HourFormat ? "Switch to 12-hour" : "Switch to 24-hour";
+    });
+  
+    saveSettingsButton.addEventListener("click", () => {
+      savePreferences();
+      alert("Settings saved!");
+    });
+  
+    setAlarmButton.addEventListener("click", () => {
+      const alarmTime = alarmTimeInput.value;
+      if (alarmTime) {
+        alarms.push(alarmTime);
+        localStorage.setItem(alarmsKey, JSON.stringify(alarms));
+        renderAlarms();
+        alarmTimeInput.value = "";
+      } else {
+        alert("Please set a valid time.");
+      }
+    });
+  
+    // Initialize
+    loadPreferences();
+    setInterval(updateClock, 1000);
+    updateClock();
+  });
+  

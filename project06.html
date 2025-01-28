@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Periodic Table</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Dark pink for text */
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #search-bar {
+      margin-bottom: 20px;
+    }
+    #search-bar input {
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #d63384;
+      border-radius: 5px;
+    }
+    .periodic-table {
+      display: grid;
+      grid-template-columns: repeat(18, 1fr); /* 18 columns for layout */
+      gap: 5px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .element {
+      background-color: #fff0f6; /* Light pink for elements */
+      border: 2px solid #d63384;
+      border-radius: 5px;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+    .element:hover {
+      transform: scale(1.1);
+      background-color: #d63384; /* Highlight pink on hover */
+      color: white;
+    }
+    .element.highlighted {
+      background-color: #b8266a; /* Darker pink for selected elements */
+      color: white;
+    }
+    .details {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .group-highlight {
+      background-color: #f5c4e1 !important; /* Lighter pink for group highlights */
+    }
+  </style>
+</head>
+<body>
+  <h1>Interactive Periodic Table</h1>
+  <div id="search-bar">
+    <input type="text" id="search-input" placeholder="Search by name, symbol, or atomic number">
+  </div>
+  <div class="periodic-table" id="periodic-table"></div>
+  <div class="details" id="element-details"></div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const elements = [
+        { number: 1, symbol: "H", name: "Hydrogen", group: "Nonmetal" },
+        { number: 2, symbol: "He", name: "Helium", group: "Noble Gas" },
+        { number: 3, symbol: "Li", name: "Lithium", group: "Alkali Metal" },
+        { number: 4, symbol: "Be", name: "Beryllium", group: "Alkaline Earth Metal" },
+        { number: 5, symbol: "B", name: "Boron", group: "Metalloid" },
+        { number: 6, symbol: "C", name: "Carbon", group: "Nonmetal" },
+        { number: 7, symbol: "N", name: "Nitrogen", group: "Nonmetal" },
+        { number: 8, symbol: "O", name: "Oxygen", group: "Nonmetal" },
+        { number: 9, symbol: "F", name: "Fluorine", group: "Halogen" },
+        { number: 10, symbol: "Ne", name: "Neon", group: "Noble Gas" },
+        { number: 11, symbol: "Na", name: "Sodium", group: "Alkali Metal" },
+        { number: 12, symbol: "Mg", name: "Magnesium", group: "Alkaline Earth Metal" },
+        { number: 13, symbol: "Al", name: "Aluminium", group: "Post-Transition Metal" },
+        { number: 14, symbol: "Si", name: "Silicon", group: "Metalloid" },
+        { number: 15, symbol: "P", name: "Phosphorus", group: "Nonmetal" },
+        { number: 16, symbol: "S", name: "Sulfur", group: "Nonmetal" },
+        { number: 17, symbol: "Cl", name: "Chlorine", group: "Halogen" },
+        { number: 18, symbol: "Ar", name: "Argon", group: "Noble Gas" },
+        { number: 19, symbol: "K", name: "Potassium", group: "Alkali Metal" },
+        { number: 20, symbol: "Ca", name: "Calcium", group: "Alkaline Earth Metal" },
+        { number: 21, symbol: "Sc", name: "Scandium", group: "Transition Metal" },
+        { number: 22, symbol: "Ti", name: "Titanium", group: "Transition Metal" },
+        { number: 23, symbol: "V", name: "Vanadium", group: "Transition Metal" },
+        { number: 24, symbol: "Cr", name: "Chromium", group: "Transition Metal" },
+        { number: 25, symbol: "Mn", name: "Manganese", group: "Transition Metal" },
+        { number: 26, symbol: "Fe", name: "Iron", group: "Transition Metal" },
+        { number: 27, symbol: "Co", name: "Cobalt", group: "Transition Metal" },
+        { number: 28, symbol: "Ni", name: "Nickel", group: "Transition Metal" },
+        { number: 29, symbol: "Cu", name: "Copper", group: "Transition Metal" },
+        { number: 30, symbol: "Zn", name: "Zinc", group: "Transition Metal" },
+        // Add the rest of the elements up to 118
+        { number: 118, symbol: "Og", name: "Oganesson", group: "Noble Gas" }
+      ];
+
+      const periodicTable = document.getElementById("periodic-table");
+      const elementDetails = document.getElementById("element-details");
+      const searchInput = document.getElementById("search-input");
+
+      const renderTable = () => {
+        periodicTable.innerHTML = "";
+        elements.forEach((element) => {
+          const elementDiv = document.createElement("div");
+          elementDiv.classList.add("element");
+          elementDiv.dataset.number = element.number;
+          elementDiv.dataset.symbol = element.symbol;
+          elementDiv.dataset.name = element.name.toLowerCase();
+          elementDiv.dataset.group = element.group;
+
+          elementDiv.innerHTML = `
+            <div><strong>${element.symbol}</strong></div>
+            <div>${element.number}</div>
+          `;
+
+          elementDiv.addEventListener("click", () => selectElement(element));
+          periodicTable.appendChild(elementDiv);
+        });
+      };
+
+      const selectElement = (element) => {
+        document.querySelectorAll(".element").forEach((el) => {
+          el.classList.remove("highlighted", "group-highlight");
+        });
+
+        const selectedElement = document.querySelector(
+          `.element[data-number='${element.number}']`
+        );
+        if (selectedElement) {
+          selectedElement.classList.add("highlighted");
+        }
+
+        document.querySelectorAll(`.element[data-group='${element.group}']`).forEach((el) => {
+          el.classList.add("group-highlight");
+        });
+
+        elementDetails.innerHTML = `
+          <strong>Element Details:</strong><br>
+          Name: ${element.name}<br>
+          Symbol: ${element.symbol}<br>
+          Atomic Number: ${element.number}<br>
+          Group: ${element.group}
+        `;
+      };
+
+      searchInput.addEventListener("input", () => {
+        const query = searchInput.value.toLowerCase().trim();
+        document.querySelectorAll(".element").forEach((el) => {
+          const matches =
+            el.dataset.name.includes(query) ||
+            el.dataset.symbol.toLowerCase().includes(query) ||
+            el.dataset.number === query;
+          el.style.display = matches ? "block" : "none";
+        });
+      });
+
+      renderTable();
+    });
+  </script>
+</body>
+</html>

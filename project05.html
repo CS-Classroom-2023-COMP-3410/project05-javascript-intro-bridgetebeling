@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customizable Drawing Canvas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Dark pink for text */
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    .controls label, .controls input, .controls button {
+      margin: 5px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #d63384;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #b8266a; /* Darker pink on hover */
+    }
+    canvas {
+      border: 2px solid #d63384; /* Pink border */
+      display: block;
+      margin: 20px auto;
+      background-color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Customizable Drawing Canvas</h1>
+  <div class="controls">
+    <label for="brush-color">Brush Color:</label>
+    <input type="color" id="brush-color" value="#d63384">
+    <label for="brush-size">Brush Size:</label>
+    <input type="number" id="brush-size" min="1" max="50" value="5">
+    <label for="bg-color">Canvas Background:</label>
+    <input type="color" id="bg-color" value="#ffffff">
+    <button id="clear-canvas">Clear Canvas</button>
+    <button id="undo">Undo</button>
+    <button id="save-image">Save Image</button>
+  </div>
+  <canvas id="drawing-canvas" width="800" height="500"></canvas>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("drawing-canvas");
+      const ctx = canvas.getContext("2d");
+
+      const brushColorInput = document.getElementById("brush-color");
+      const brushSizeInput = document.getElementById("brush-size");
+      const bgColorInput = document.getElementById("bg-color");
+      const clearCanvasButton = document.getElementById("clear-canvas");
+      const undoButton = document.getElementById("undo");
+      const saveImageButton = document.getElementById("save-image");
+
+      let isDrawing = false;
+      let brushColor = brushColorInput.value;
+      let brushSize = parseInt(brushSizeInput.value, 10);
+      let strokes = []; // To store all strokes for undo functionality
+      let currentStroke = [];
+
+      // Set initial canvas background color
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Start drawing
+      canvas.addEventListener("mousedown", (e) => {
+        isDrawing = true;
+        currentStroke = []; // Reset current stroke
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+      });
+
+      // Draw on canvas
+      canvas.addEventListener("mousemove", (e) => {
+        if (!isDrawing) return;
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        // Save each point of the stroke
+        currentStroke.push({ x: e.offsetX, y: e.offsetY, color: brushColor, size: brushSize });
+      });
+
+      // Stop drawing
+      canvas.addEventListener("mouseup", () => {
+        if (isDrawing) {
+          isDrawing = false;
+          strokes.push([...currentStroke]); // Save the completed stroke
+        }
+      });
+
+      // Clear the canvas
+      clearCanvasButton.addEventListener("click", () => {
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        strokes = []; // Clear all strokes
+      });
+
+      // Undo the last stroke
+      undoButton.addEventListener("click", () => {
+        strokes.pop(); // Remove the last stroke
+        redrawCanvas(); // Redraw the canvas without the last stroke
+      });
+
+      // Save the canvas as an image
+      saveImageButton.addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.download = "drawing.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+
+      // Update brush color
+      brushColorInput.addEventListener("change", (e) => {
+        brushColor = e.target.value;
+      });
+
+      // Update brush size
+      brushSizeInput.addEventListener("change", (e) => {
+        brushSize = parseInt(e.target.value, 10);
+      });
+
+      // Update canvas background color
+      bgColorInput.addEventListener("change", (e) => {
+        ctx.fillStyle = e.target.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        redrawCanvas(); // Redraw all strokes after changing background
+      });
+
+      // Redraw the canvas with all strokes
+      function redrawCanvas() {
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height); // Clear with background color
+
+        // Redraw each stroke
+        for (const stroke of strokes) {
+          ctx.beginPath();
+          for (let i = 0; i < stroke.length; i++) {
+            const point = stroke[i];
+            ctx.strokeStyle = point.color;
+            ctx.lineWidth = point.size;
+            ctx.lineCap = "round";
+
+            if (i === 0) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+            ctx.stroke();
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

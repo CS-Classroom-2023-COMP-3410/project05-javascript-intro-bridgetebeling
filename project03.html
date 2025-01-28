@@ -1,0 +1,60 @@
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Darker pink for text */
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    .game-info {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .card {
+      width: 80px;
+      height: 80px;
+      background-color: #d63384; /* Pink card background */
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+      transform: scale(1);
+      transition: transform 0.3s, background-color 0.3s;
+    }
+    .card.matched {
+      background-color: #a84a73; /* Muted pink for matched cards */
+      cursor: default;
+    }
+    .card.flipped {
+      background-color: #fff0f6; /* Light pink for flipped cards */
+      color: #d63384;
+      transform: scale(1.1);
+    }
+    button {
+      background-color: #d63384; /* Pink button background */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #b8266a; /* Darker pink on hover */
+    }
+  </style>
+  

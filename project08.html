@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Story Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Dark pink for text */
+      text-align: center;
+    }
+    .story-container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #fff0f6; /* Soft pink background */
+      border: 2px solid #d63384;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .story-text {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    button {
+      background-color: #d63384;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #b8266a; /* Darker pink on hover */
+      transform: scale(1.05);
+    }
+    .progress {
+      margin: 20px 0;
+      font-size: 14px;
+      color: #d63384;
+    }
+    .reset-save-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .reset-save-buttons button {
+      background-color: #f5a1c6; /* Light pink for reset/save buttons */
+      color: #d63384;
+    }
+  </style>
+</head>
+<body>
+  <h1>Interactive Story Game</h1>
+  <div class="story-container">
+    <div id="story-text" class="story-text">Welcome to the story game. Make your choice!</div>
+    <div id="choices" class="choices"></div>
+    <div class="progress" id="progress"></div>
+    <div class="reset-save-buttons">
+      <button id="reset-game">Reset Game</button>
+      <button id="save-progress">Save Progress</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const storyText = document.getElementById("story-text");
+      const choicesContainer = document.getElementById("choices");
+      const progressDisplay = document.getElementById("progress");
+      const resetButton = document.getElementById("reset-game");
+      const saveButton = document.getElementById("save-progress");
+
+      const story = {
+        start: {
+          text: "You find yourself in a dark forest. Do you want to go left or right?",
+          choices: [
+            { text: "Go left", next: "leftPath" },
+            { text: "Go right", next: "rightPath" },
+          ],
+        },
+        leftPath: {
+          text: "You encounter a mysterious old man. Do you talk to him or run away?",
+          choices: [
+            { text: "Talk to him", next: "talkToMan" },
+            { text: "Run away", next: "runAway" },
+          ],
+        },
+        rightPath: {
+          text: "You stumble upon a cave. Do you enter or stay outside?",
+          choices: [
+            { text: "Enter the cave", next: "enterCave" },
+            { text: "Stay outside", next: "stayOutside" },
+          ],
+        },
+        talkToMan: {
+          text: "The old man gives you a magical sword. You win the game!",
+          choices: [],
+        },
+        runAway: {
+          text: "You trip and fall into a pit. Game over.",
+          choices: [],
+        },
+        enterCave: {
+          text: "Inside the cave, you find a treasure chest. You win the game!",
+          choices: [],
+        },
+        stayOutside: {
+          text: "A bear appears and chases you away. Game over.",
+          choices: [],
+        },
+      };
+
+      let currentNode = "start";
+      const progress = [];
+
+      const saveProgress = () => {
+        localStorage.setItem("storyProgress", JSON.stringify({ currentNode, progress }));
+      };
+
+      const loadProgress = () => {
+        const savedData = localStorage.getItem("storyProgress");
+        if (savedData) {
+          const { currentNode: savedNode, progress: savedProgress } = JSON.parse(savedData);
+          currentNode = savedNode;
+          progress.push(...savedProgress);
+        }
+      };
+
+      const renderStory = () => {
+        const node = story[currentNode];
+        storyText.textContent = node.text;
+        choicesContainer.innerHTML = "";
+
+        if (node.choices.length > 0) {
+          node.choices.forEach((choice) => {
+            const button = document.createElement("button");
+            button.textContent = choice.text;
+            button.addEventListener("click", () => {
+              progress.push(choice.text);
+              currentNode = choice.next;
+              renderStory();
+            });
+            choicesContainer.appendChild(button);
+          });
+        } else {
+          const endMessage = document.createElement("div");
+          endMessage.textContent = "The story has ended.";
+          choicesContainer.appendChild(endMessage);
+        }
+
+        renderProgress();
+      };
+
+      const renderProgress = () => {
+        progressDisplay.textContent = `Progress: ${progress.join(" → ")}`;
+      };
+
+      resetButton.addEventListener("click", () => {
+        currentNode = "start";
+        progress.length = 0;
+        renderStory();
+        localStorage.removeItem("storyProgress");
+      });
+
+      saveButton.addEventListener("click", () => {
+        saveProgress();
+        alert("Progress saved!");
+      });
+
+      // Initialize
+      loadProgress();
+      renderStory();
+    });
+  </script>
+</body>
+</html>

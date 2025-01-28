@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customizable Digital Clock</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Dark pink for text */
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .clock-container {
+      margin: 20px auto;
+      padding: 20px;
+      border: 2px solid #d63384;
+      border-radius: 10px;
+      background-color: #fff0f6; /* Soft pink box */
+      display: inline-block;
+    }
+    .clock {
+      font-size: 48px;
+      margin: 10px 0;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    .controls label, .controls input, .controls button, .controls select {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #d63384;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #d63384;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      background-color: #b8266a; /* Darker pink */
+    }
+    .alarms {
+      margin-top: 20px;
+    }
+    .alarm {
+      margin: 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .alarm span {
+      margin-right: 10px;
+    }
+    .alarm button {
+      background-color: #f5a1c6; /* Light pink for buttons */
+      color: #d63384;
+    }
+  </style>
+</head>
+<body>
+  <h1>Customizable Digital Clock</h1>
+  <div class="clock-container">
+    <div id="clock" class="clock">00:00:00</div>
+    <button id="toggle-format">Switch to 24-hour</button>
+  </div>
+
+  <div class="controls">
+    <h3>Customize Clock</h3>
+    <label for="font-size">Font Size:</label>
+    <input type="number" id="font-size" min="20" max="100" value="48">
+    <label for="bg-color">Background Color:</label>
+    <input type="color" id="bg-color" value="#fff0f6">
+    <label for="text-color">Text Color:</label>
+    <input type="color" id="text-color" value="#d63384">
+    <button id="save-settings">Save Settings</button>
+  </div>
+
+  <div class="alarms">
+    <h3>Set Alarm</h3>
+    <label for="alarm-time">Alarm Time:</label>
+    <input type="time" id="alarm-time">
+    <button id="add-alarm">Add Alarm</button>
+    <ul id="alarm-list"></ul>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const clock = document.getElementById("clock");
+      const toggleFormatButton = document.getElementById("toggle-format");
+      const fontSizeInput = document.getElementById("font-size");
+      const bgColorInput = document.getElementById("bg-color");
+      const textColorInput = document.getElementById("text-color");
+      const saveSettingsButton = document.getElementById("save-settings");
+      const alarmTimeInput = document.getElementById("alarm-time");
+      const addAlarmButton = document.getElementById("add-alarm");
+      const alarmList = document.getElementById("alarm-list");
+
+      let is24HourFormat = false;
+      let alarms = JSON.parse(localStorage.getItem("alarms")) || [];
+
+      // Load saved settings
+      const loadSettings = () => {
+        const savedSettings = JSON.parse(localStorage.getItem("clockSettings")) || {};
+        if (savedSettings.fontSize) clock.style.fontSize = `${savedSettings.fontSize}px`;
+        if (savedSettings.bgColor) document.body.style.backgroundColor = savedSettings.bgColor;
+        if (savedSettings.textColor) clock.style.color = savedSettings.textColor;
+
+        fontSizeInput.value = savedSettings.fontSize || 48;
+        bgColorInput.value = savedSettings.bgColor || "#fff0f6";
+        textColorInput.value = savedSettings.textColor || "#d63384";
+      };
+
+      const saveSettings = () => {
+        const settings = {
+          fontSize: fontSizeInput.value,
+          bgColor: bgColorInput.value,
+          textColor: textColorInput.value,
+        };
+        localStorage.setItem("clockSettings", JSON.stringify(settings));
+        loadSettings();
+      };
+
+      // Render alarms
+      const renderAlarms = () => {
+        alarmList.innerHTML = "";
+        alarms.forEach((alarm, index) => {
+          const alarmItem = document.createElement("li");
+          alarmItem.className = "alarm";
+          alarmItem.innerHTML = `
+            <span>${alarm}</span>
+            <button data-index="${index}">Delete</button>
+          `;
+          alarmList.appendChild(alarmItem);
+        });
+      };
+
+      // Update clock
+      const updateClock = () => {
+        const now = new Date();
+        let hours = now.getHours();
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const seconds = now.getSeconds().toString().padStart(2, "0");
+        let amPm = "";
+
+        if (!is24HourFormat) {
+          amPm = hours >= 12 ? " PM" : " AM";
+          hours = hours % 12 || 12;
+        }
+
+        clock.textContent = `${hours.toString().padStart(2, "0")}:${minutes}:${seconds}${amPm}`;
+
+        // Check alarms
+        const currentTime = `${hours.toString().padStart(2, "0")}:${minutes}`;
+        if (alarms.includes(currentTime)) {
+          alert(`Alarm ringing: ${currentTime}`);
+          alarms = alarms.filter((alarm) => alarm !== currentTime);
+          localStorage.setItem("alarms", JSON.stringify(alarms));
+          renderAlarms();
+        }
+      };
+
+      // Event Listeners
+      toggleFormatButton.addEventListener("click", () => {
+        is24HourFormat = !is24HourFormat;
+        toggleFormatButton.textContent = is24HourFormat ? "Switch to 12-hour" : "Switch to 24-hour";
+      });
+
+      saveSettingsButton.addEventListener("click", saveSettings);
+
+      addAlarmButton.addEventListener("click", () => {
+        const alarmTime = alarmTimeInput.value;
+        if (alarmTime && !alarms.includes(alarmTime)) {
+          alarms.push(alarmTime);
+          localStorage.setItem("alarms", JSON.stringify(alarms));
+          renderAlarms();
+        }
+      });
+
+      alarmList.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") {
+          const index = e.target.dataset.index;
+          alarms.splice(index, 1);
+          localStorage.setItem("alarms", JSON.stringify(alarms));
+          renderAlarms();
+        }
+      });
+
+      // Initialize
+      loadSettings();
+      renderAlarms();
+      setInterval(updateClock, 1000);
+    });
+  </script>
+</body>
+</html>

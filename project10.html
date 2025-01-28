@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customizable Keyboard Trainer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      background-color: #ffe6f2; /* Light pink background */
+      color: #d63384; /* Dark pink text */
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .controls {
+      margin-bottom: 20px;
+    }
+    .controls label, .controls select, .controls input, .controls button {
+      margin: 5px;
+      font-size: 16px;
+      padding: 5px 10px;
+      border: 2px solid #d63384;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #d63384;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    button:hover {
+      background-color: #b8266a; /* Darker pink */
+      transform: scale(1.05);
+    }
+    .typing-area {
+      margin-top: 20px;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      border: 2px solid #d63384;
+      background-color: #fff0f6; /* Light pink box */
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .text-display {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+      white-space: pre-wrap;
+      color: #d63384;
+    }
+    .text-display span.correct {
+      color: green;
+    }
+    .text-display span.incorrect {
+      color: red;
+    }
+    .input-area {
+      width: 100%;
+      padding: 10px;
+      font-size: 18px;
+      border: 2px solid #d63384;
+      border-radius: 5px;
+      color: #d63384;
+    }
+    .results {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Customizable Keyboard Trainer</h1>
+  <div class="controls">
+    <label for="difficulty-select">Difficulty:</label>
+    <select id="difficulty-select">
+      <option value="easy">Easy (Short, no special characters)</option>
+      <option value="medium" selected>Medium (Moderate length)</option>
+      <option value="hard">Hard (Long with special characters)</option>
+    </select>
+    <button id="start-button">Start Training</button>
+  </div>
+  <div class="typing-area" id="typing-area" style="display: none;">
+    <div class="text-display" id="text-display"></div>
+    <input type="text" id="typing-input" class="input-area" placeholder="Start typing here..." />
+  </div>
+  <div class="results" id="results" style="display: none;"></div>
+  <button id="restart-button" style="display: none;">Restart</button>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const textDisplay = document.getElementById("text-display");
+      const typingInput = document.getElementById("typing-input");
+      const startButton = document.getElementById("start-button");
+      const restartButton = document.getElementById("restart-button");
+      const typingArea = document.getElementById("typing-area");
+      const resultsDisplay = document.getElementById("results");
+      const difficultySelect = document.getElementById("difficulty-select");
+
+      let targetText = "";
+      let startTime = null;
+      let timerRunning = false;
+
+      const textSamples = {
+        easy: [
+          "The quick brown fox jumps over the lazy dog.",
+          "Hello world!",
+          "Typing is fun.",
+        ],
+        medium: [
+          "To be or not to be, that is the question.",
+          "Practice typing every day to improve your skills.",
+          "Keyboard trainers help you type faster and more accurately.",
+        ],
+        hard: [
+          "Typing quickly requires both speed and precision. Ready?",
+          "Advanced practice includes symbols: !@#$%^&*().",
+          "Focus on accuracy; speed will naturally improve over time.",
+        ],
+      };
+
+      const generateTargetText = (difficulty) => {
+        const samples = textSamples[difficulty];
+        return samples[Math.floor(Math.random() * samples.length)];
+      };
+
+      const startTraining = () => {
+        const difficulty = difficultySelect.value;
+        targetText = generateTargetText(difficulty);
+        textDisplay.textContent = targetText;
+        textDisplay.innerHTML = targetText.split("").map((char) => `<span>${char}</span>`).join("");
+
+        typingInput.value = "";
+        resultsDisplay.style.display = "none";
+        restartButton.style.display = "none";
+        typingArea.style.display = "block";
+
+        startTime = null;
+        timerRunning = false;
+      };
+
+      const calculateResults = (typedText) => {
+        const elapsedTime = (Date.now() - startTime) / 1000; // Time in seconds
+        const words = targetText.split(" ").length;
+        const wpm = ((words / elapsedTime) * 60).toFixed(2);
+
+        let correctChars = 0;
+        for (let i = 0; i < targetText.length; i++) {
+          if (typedText[i] === targetText[i]) correctChars++;
+        }
+        const accuracy = ((correctChars / targetText.length) * 100).toFixed(2);
+
+        resultsDisplay.style.display = "block";
+        resultsDisplay.innerHTML = `
+          <p><strong>Results:</strong></p>
+          <p>Words per minute (WPM): ${wpm}</p>
+          <p>Accuracy: ${accuracy}%</p>
+        `;
+
+        restartButton.style.display = "block";
+      };
+
+      const handleTyping = (event) => {
+        if (!timerRunning) {
+          startTime = Date.now();
+          timerRunning = true;
+        }
+
+        const typedText = typingInput.value;
+        const characters = textDisplay.querySelectorAll("span");
+
+        for (let i = 0; i < characters.length; i++) {
+          if (typedText[i] == null) {
+            characters[i].classList.remove("correct", "incorrect");
+          } else if (typedText[i] === targetText[i]) {
+            characters[i].classList.add("correct");
+            characters[i].classList.remove("incorrect");
+          } else {
+            characters[i].classList.add("incorrect");
+            characters[i].classList.remove("correct");
+          }
+        }
+
+        if (typedText === targetText) {
+          typingInput.disabled = true;
+          calculateResults(typedText);
+        }
+      };
+
+      startButton.addEventListener("click", startTraining);
+      typingInput.addEventListener("input", handleTyping);
+      restartButton.addEventListener("click", startTraining);
+    });
+  </script>
+</body>
+</html>
